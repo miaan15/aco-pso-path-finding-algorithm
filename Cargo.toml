@@ -1,0 +1,15 @@
+[package]
+name = "aco-pso-path-finding-algorithm"
+version = "0.1.0"
+edition = "2024"
+authors = ["miaan"]
+
+[dependencies]
+bevy = { version = "0.17.3", features = ["dynamic_linking"] }
+rand = "0.9.2"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
