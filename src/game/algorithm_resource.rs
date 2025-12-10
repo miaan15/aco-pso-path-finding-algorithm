@@ -6,4 +6,5 @@ use std::sync::Arc;
 pub struct AlgorithmResource {
     pub grid: Arc<Grid>,
     pub problem: Problem,
+    pub path: Option<Vec<bevy::prelude::Vec2>>,
 }

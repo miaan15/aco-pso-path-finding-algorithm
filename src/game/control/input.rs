@@ -7,7 +7,7 @@ pub fn handle_keyboard_input(
     mut next_state: ResMut<NextState<GameState>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::KeyC) {
-        next_state.set(GameState::Idle);
+        next_state.set(GameState::Cancel);
         println!("State: Idle (cancelled)");
         return;
     }
@@ -15,7 +15,7 @@ pub fn handle_keyboard_input(
     match current_state.get() {
         GameState::Idle => {
             if keyboard_input.just_pressed(KeyCode::KeyR) {
-                next_state.set(GameState::Loading);
+                next_state.set(GameState::Solving);
                 println!("State: Loading (running algorithm)");
             } else if keyboard_input.just_pressed(KeyCode::KeyS) {
                 next_state.set(GameState::SetStart);

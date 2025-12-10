@@ -5,8 +5,9 @@ use crate::{
     algorithm::{
         grid::{Grid, GridCell},
         problem::Problem,
+        solve::a_star::AStarStrategy,
     },
-    game::algorithm_resource::AlgorithmResource,
+    game::{algorithm_resource::AlgorithmResource, control::GameState},
 };
 
 pub fn setup_game(mut commands: Commands) {
@@ -26,6 +27,7 @@ pub fn create_algorithm_resource() -> AlgorithmResource {
             start: None,
             goal: None,
         },
+        path: None,
     }
 }
 
@@ -47,4 +49,30 @@ fn create_grid() -> Arc<Grid> {
     }
 
     Arc::new(grid)
+}
+
+pub fn run_pathfinding(
+    current_state: Res<State<GameState>>,
+    mut algorithm_resource: ResMut<AlgorithmResource>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    if let (Some(start), Some(goal)) = (
+        algorithm_resource.problem.start,
+        algorithm_resource.problem.goal,
+    ) {
+        let a_star = AStarStrategy {};
+        let path = a_star.path_finding(&algorithm_resource.problem);
+
+        let complete_path = match path {
+            Some(mut p) => {
+                p.insert(0, start);
+                p.push(goal);
+                Some(p)
+            }
+            None => Some(vec![start, goal]),
+        };
+
+        algorithm_resource.path = complete_path;
+        next_state.set(GameState::DoneRun);
+    }
 }

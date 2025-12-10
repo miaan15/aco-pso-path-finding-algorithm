@@ -17,6 +17,7 @@ impl Plugin for ControlPlugin {
         app.add_systems(Update, handle_keyboard_input)
             .add_systems(Update, handle_mouse_selection.run_if(in_state(GameState::SetStart)))
             .add_systems(Update, handle_mouse_selection.run_if(in_state(GameState::SetGoal)))
+            .add_systems(OnEnter(GameState::Cancel), on_cancel)
             .add_systems(OnEnter(GameState::DoneRun), on_done_run)
             .add_systems(OnEnter(GameState::DoneStart), on_done_start)
             .add_systems(OnEnter(GameState::DoneGoal), on_done_goal);
