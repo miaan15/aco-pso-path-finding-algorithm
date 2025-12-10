@@ -1,4 +1,5 @@
 mod game;
+mod algorithm;
 
 use bevy::prelude::*;
 use game::prelude::*;
