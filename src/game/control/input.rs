@@ -1,22 +1,40 @@
-use bevy::prelude::*;
 use crate::game::control::GameState;
+use bevy::prelude::*;
 
 pub fn handle_keyboard_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    current_state: Res<State<GameState>>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::KeyS) {
-        next_state.set(GameState::SetStart);
-        println!("State: SetStart");
-    } else if keyboard_input.just_pressed(KeyCode::KeyG) {
-        next_state.set(GameState::SetGoal);
-        println!("State: SetGoal");
-    } else if keyboard_input.just_pressed(KeyCode::KeyC) {
+    if keyboard_input.just_pressed(KeyCode::KeyC) {
         next_state.set(GameState::Idle);
         println!("State: Idle (cancelled)");
-    } else if keyboard_input.just_pressed(KeyCode::KeyR) {
-        next_state.set(GameState::Loading);
-        println!("State: Loading (running algorithm)");
+        return;
+    }
+
+    match current_state.get() {
+        GameState::Idle => {
+            if keyboard_input.just_pressed(KeyCode::KeyR) {
+                next_state.set(GameState::Loading);
+                println!("State: Loading (running algorithm)");
+            } else if keyboard_input.just_pressed(KeyCode::KeyS) {
+                next_state.set(GameState::SetStart);
+                println!("State: SetStart");
+            } else if keyboard_input.just_pressed(KeyCode::KeyG) {
+                next_state.set(GameState::SetGoal);
+                println!("State: SetGoal");
+            }
+        }
+        GameState::SetStart | GameState::SetGoal => {
+            if keyboard_input.just_pressed(KeyCode::KeyS) {
+                next_state.set(GameState::SetStart);
+                println!("State: SetStart");
+            } else if keyboard_input.just_pressed(KeyCode::KeyG) {
+                next_state.set(GameState::SetGoal);
+                println!("State: SetGoal");
+            }
+        }
+        _ => {}
     }
 }
 
@@ -32,7 +50,9 @@ pub fn handle_mouse_selection(
         let window = windows.single();
         let cursor_screen_pos = window.unwrap().cursor_position().unwrap();
         let (camera, camera_transform) = camera_q.iter().next().unwrap();
-        let ray = camera.viewport_to_world(camera_transform, cursor_screen_pos).unwrap();
+        let ray = camera
+            .viewport_to_world(camera_transform, cursor_screen_pos)
+            .unwrap();
         let world_pos = Vec2::new(ray.origin.x, ray.origin.y);
 
         match current_state.get() {
