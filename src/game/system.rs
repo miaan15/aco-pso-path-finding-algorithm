@@ -6,7 +6,11 @@ use crate::{
     game::algorithm_resource::AlgorithmResource,
 };
 
-pub fn setup_camera(mut commands: Commands) {
+pub fn setup_game(mut commands: Commands) {
+    setup_camera(commands);
+}
+
+fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2d);
 }
 
