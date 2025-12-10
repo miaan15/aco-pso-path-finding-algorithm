@@ -38,12 +38,12 @@ pub fn handle_mouse_selection(
         match current_state.get() {
             GameState::SetStart => {
                 algorithm_resource.problem.start = Some(world_pos);
-                next_state.set(GameState::Idle);
+                next_state.set(GameState::DoneStart);
                 println!("Start set at: ({:.1}, {:.1})", world_pos.x, world_pos.y);
             }
             GameState::SetGoal => {
                 algorithm_resource.problem.goal = Some(world_pos);
-                next_state.set(GameState::Idle);
+                next_state.set(GameState::DoneGoal);
                 println!("Goal set at: ({:.1}, {:.1})", world_pos.x, world_pos.y);
             }
             _ => {}
