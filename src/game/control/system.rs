@@ -25,7 +25,7 @@ pub fn on_done_run(mut next_state: ResMut<NextState<GameState>>) {
 }
 
 pub fn on_done_start(
-    mut commands: Commands,
+    commands: Commands,
     algorithm_resource: Res<crate::game::algorithm_resource::AlgorithmResource>,
     start_point_query: Query<Entity, With<StartPoint>>,
     goal_point_query: Query<Entity, With<GoalPoint>>,
@@ -42,7 +42,7 @@ pub fn on_done_start(
 }
 
 pub fn on_done_goal(
-    mut commands: Commands,
+    commands: Commands,
     algorithm_resource: Res<crate::game::algorithm_resource::AlgorithmResource>,
     start_point_query: Query<Entity, With<StartPoint>>,
     goal_point_query: Query<Entity, With<GoalPoint>>,

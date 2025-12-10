@@ -9,7 +9,7 @@ use crate::{
     game::{algorithm_resource::AlgorithmResource, async_pathfinding::PathfindingTask, control::GameState},
 };
 
-pub fn setup_game(mut commands: Commands) {
+pub fn setup_game(commands: Commands) {
     setup_camera(commands);
 }
 

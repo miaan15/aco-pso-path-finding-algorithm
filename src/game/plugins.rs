@@ -2,7 +2,7 @@ use crate::game::control::{ControlPlugin, GameState};
 use crate::game::grid_renderer::GridPlugin;
 use crate::game::solve_renderer::SolvePlugin;
 use crate::game::system::*;
-use crate::game::async_pathfinding::{PathfindingTask, check_pathfinding_completion};
+use crate::game::async_pathfinding::check_pathfinding_completion;
 use bevy::prelude::*;
 
 pub struct GameScenePlugin;

@@ -4,7 +4,6 @@ mod system;
 
 pub use game_state::GameState;
 
-use game_state::*;
 use input::*;
 use system::*;
 

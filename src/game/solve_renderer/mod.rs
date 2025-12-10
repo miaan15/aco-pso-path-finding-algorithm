@@ -1,9 +1,8 @@
 mod component;
 mod system;
 
-pub use system::{render_start_goal, render_path, clear_path};
-pub use component::{StartPoint, GoalPoint, PointRenderer, PathRenderer};
-use crate::game::system::run_pathfinding;
+pub use system::{render_start_goal, render_path};
+pub use component::{StartPoint, GoalPoint, PathRenderer};
 
 use bevy::prelude::*;
 

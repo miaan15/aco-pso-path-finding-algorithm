@@ -3,7 +3,6 @@ use crate::algorithm::grid::GridCell;
 use crate::game::algorithm_resource::AlgorithmResource;
 use crate::game::grid_renderer::component::GridRenderer;
 use bevy::prelude::*;
-use std::sync::Arc;
 
 pub fn setup_grid_renderer(mut commands: Commands, algorithm_resource: Res<AlgorithmResource>) {
     let grid = algorithm_resource.grid.clone();
