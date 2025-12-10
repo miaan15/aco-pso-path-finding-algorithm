@@ -106,25 +106,28 @@ impl Grid {
             return None;
         }
 
-        let mut t_min = 0.0;
+        let bound_min = self.root;
+        let bound_max = self.root
+            + Vec2::new(
+                self.width as f32 * self.cell_size,
+                self.height as f32 * self.cell_size,
+            );
 
-        let grid_width = self.width as f32 * self.cell_size;
-        let grid_height = self.height as f32 * self.cell_size;
+        let t_entry = self.box_intersection(ray.root, dir_norm, bound_min, bound_max)?;
 
-        let bound_min = Vec2::new(0.0, 0.0);
-        let bound_max = Vec2::new(grid_width, grid_height);
-
-        if let Some(t_bounds) = self.box_intersection(ray.root, dir_norm, bound_min, bound_max) {
-            if t_bounds < t_min {
-                return None;
-            }
+        let start_point = if t_entry > 0.0 {
+            ray.root + dir_norm * t_entry
         } else {
-            return None;
-        }
+            ray.root
+        };
 
         let cell_size = self.cell_size;
-        let mut grid_x = (ray.root.x / cell_size).floor() as isize;
-        let mut grid_y = (ray.root.y / cell_size).floor() as isize;
+
+        let local_x = start_point.x - self.root.x;
+        let local_y = start_point.y - self.root.y;
+
+        let mut grid_x = (local_x / cell_size).floor() as isize;
+        let mut grid_y = (local_y / cell_size).floor() as isize;
 
         grid_x = grid_x.clamp(0, self.width as isize - 1);
         grid_y = grid_y.clamp(0, self.height as isize - 1);
@@ -156,21 +159,26 @@ impl Grid {
             f32::MAX
         };
 
+        let grid_world_x = self.root.x + grid_x as f32 * cell_size;
+        let grid_world_y = self.root.y + grid_y as f32 * cell_size;
+
         let mut t_max_x = if dir_norm.x > 0.0 {
-            ((grid_x as f32 + 1.0) * cell_size - ray.root.x) / dir_norm.x
+            (grid_world_x + cell_size - ray.root.x) / dir_norm.x
         } else if dir_norm.x < 0.0 {
-            (grid_x as f32 * cell_size - ray.root.x) / dir_norm.x
+            (grid_world_x - ray.root.x) / dir_norm.x
         } else {
             f32::MAX
         };
 
         let mut t_max_y = if dir_norm.y > 0.0 {
-            ((grid_y as f32 + 1.0) * cell_size - ray.root.y) / dir_norm.y
+            (grid_world_y + cell_size - ray.root.y) / dir_norm.y
         } else if dir_norm.y < 0.0 {
-            (grid_y as f32 * cell_size - ray.root.y) / dir_norm.y
+            (grid_world_y - ray.root.y) / dir_norm.y
         } else {
             f32::MAX
         };
+
+        let mut t_current = t_entry.max(0.0);
 
         while grid_x >= 0
             && grid_x < self.width as isize
@@ -178,16 +186,13 @@ impl Grid {
             && grid_y < self.height as isize
         {
             if let Some(GridCell::Wall) = self.get(grid_x as usize, grid_y as usize) {
-                let hit_pos = ray.root + dir_norm * t_min;
+                let hit_pos = ray.root + dir_norm * t_current;
 
-                let cell_center = Vec2::new(
-                    grid_x as f32 * cell_size + cell_size * 0.5,
-                    grid_y as f32 * cell_size + cell_size * 0.5,
-                );
-                let to_center = (cell_center - hit_pos).normalize_or_zero();
+                let cell_world_x = self.root.x + grid_x as f32 * cell_size;
+                let cell_world_y = self.root.y + grid_y as f32 * cell_size;
 
-                let rel_pos =
-                    hit_pos - Vec2::new(grid_x as f32 * cell_size, grid_y as f32 * cell_size);
+                let rel_pos = hit_pos - Vec2::new(cell_world_x, cell_world_y);
+
                 let normal = if rel_pos.x < cell_size * 0.1 {
                     Vec2::new(-1.0, 0.0)
                 } else if rel_pos.x > cell_size * 0.9 {
@@ -197,22 +202,26 @@ impl Grid {
                 } else if rel_pos.y > cell_size * 0.9 {
                     Vec2::new(0.0, 1.0)
                 } else {
-                    to_center
+                    let cell_center = Vec2::new(
+                        cell_world_x + cell_size * 0.5,
+                        cell_world_y + cell_size * 0.5,
+                    );
+                    (cell_center - hit_pos).normalize_or_zero()
                 };
 
                 return Some(RayHitInfo {
                     pt: hit_pos,
                     nor: normal,
-                    dist: t_min,
+                    dist: t_current,
                 });
             }
 
             if t_max_x < t_max_y {
-                t_min = t_max_x;
+                t_current = t_max_x;
                 t_max_x += t_delta_x;
                 grid_x += step_x;
             } else {
-                t_min = t_max_y;
+                t_current = t_max_y;
                 t_max_y += t_delta_y;
                 grid_y += step_y;
             }
@@ -220,7 +229,6 @@ impl Grid {
 
         None
     }
-
     fn box_intersection(
         &self,
         ray_root: Vec2,
