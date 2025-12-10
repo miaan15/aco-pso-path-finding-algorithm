@@ -2,7 +2,10 @@ use bevy::prelude::*;
 use std::sync::Arc;
 
 use crate::{
-    algorithm::grid::{Grid, GridCell},
+    algorithm::{
+        grid::{Grid, GridCell},
+        problem::Problem,
+    },
     game::algorithm_resource::AlgorithmResource,
 };
 
@@ -15,8 +18,14 @@ fn setup_camera(mut commands: Commands) {
 }
 
 pub fn create_algorithm_resource() -> AlgorithmResource {
+    let _grid = create_grid();
     AlgorithmResource {
-        grid: create_grid(),
+        grid: _grid.clone(),
+        problem: Problem {
+            grid_map: _grid.clone(),
+            start: None,
+            goal: None,
+        },
     }
 }
 

@@ -6,6 +6,6 @@ use crate::algorithm::grid::Grid;
 #[derive(Debug, Clone)]
 pub struct Problem {
     pub grid_map: Arc<Grid>,
-    pub start: Vec2,
-    pub goal: Vec2,
+    pub start: Option<Vec2>,
+    pub goal: Option<Vec2>,
 }

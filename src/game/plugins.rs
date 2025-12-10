@@ -1,5 +1,6 @@
 use crate::game::control::{ControlPlugin, GameState};
 use crate::game::grid_renderer::GridPlugin;
+use crate::game::solve_renderer::SolvePlugin;
 use crate::game::system::*;
 use bevy::prelude::*;
 
@@ -11,6 +12,7 @@ impl Plugin for GameScenePlugin {
             .add_systems(Startup, setup_game)
             .add_plugins(GridPlugin)
             .add_plugins(ControlPlugin)
+            .add_plugins(SolvePlugin)
             .insert_state(GameState::Idle);
     }
 }
