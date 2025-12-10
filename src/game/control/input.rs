@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use super::game_state::GameState;
+use crate::game::control::GameState;
 
 pub fn handle_keyboard_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -49,11 +49,4 @@ pub fn handle_mouse_selection(
             _ => {}
         }
     }
-}
-
-pub fn on_done(
-    mut next_state: ResMut<NextState<GameState>>,
-) {
-    next_state.set(GameState::Idle);
-    println!("Algorithm complete, returning to Idle");
 }

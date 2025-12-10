@@ -8,7 +8,7 @@ pub struct GoalPoint;
 
 #[derive(Component)]
 pub struct PointRenderer {
-    pub radius: f32,
+    pub width: f32,
     pub color: Color,
 }
 
@@ -20,7 +20,7 @@ pub struct PathRenderer {
 
 impl PointRenderer {
     pub fn new(radius: f32, color: Color) -> Self {
-        Self { radius, color }
+        Self { width: radius, color }
     }
 }
 
