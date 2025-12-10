@@ -16,14 +16,14 @@ pub fn render_start_goal(
         commands
             .spawn((
                 StartPoint,
-                PointRenderer::new(10.0, Color::srgb(0.0, 1.0, 0.0)),
+                PointRenderer::new(3.0, Color::srgb(0.0, 1.0, 0.0)),
                 Transform::from_xyz(start_pos.x, start_pos.y, 1.0),
                 Visibility::default(),
             ))
             .with_children(|parent| {
                 parent.spawn(Sprite {
                     color: Color::srgb(0.0, 1.0, 0.0),
-                    custom_size: Some(Vec2::splat(20.0)),
+                    custom_size: Some(Vec2::splat(10.0)),
                     ..default()
                 });
             });
@@ -33,14 +33,14 @@ pub fn render_start_goal(
         commands
             .spawn((
                 GoalPoint,
-                PointRenderer::new(10.0, Color::srgb(1.0, 0.0, 0.0)),
+                PointRenderer::new(3.0, Color::srgb(1.0, 0.0, 0.0)),
                 Transform::from_xyz(goal_pos.x, goal_pos.y, 1.0),
                 Visibility::default(),
             ))
             .with_children(|parent| {
                 parent.spawn(Sprite {
                     color: Color::srgb(1.0, 0.0, 0.0),
-                    custom_size: Some(Vec2::splat(20.0)),
+                    custom_size: Some(Vec2::splat(10.0)),
                     ..default()
                 });
             });
@@ -73,7 +73,7 @@ pub fn render_path(
             let angle = f32::atan2(direction.y, direction.x);
 
             commands.spawn((
-                PathRenderer::new(3.0, Color::srgb(0.2, 0.6, 1.0)),
+                PathRenderer::new(2.0, Color::srgb(0.2, 0.6, 1.0)),
                 Transform {
                     translation: ((start + end) / 2.0).extend(0.5),
                     rotation: Quat::from_rotation_z(angle),

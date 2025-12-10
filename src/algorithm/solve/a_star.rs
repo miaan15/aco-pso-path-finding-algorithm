@@ -70,7 +70,7 @@ impl ProbeDirection {
     }
 }
 impl AStarStrategy {
-    const STEP_SIZE: f32 = 25.0;
+    const STEP_SIZE: f32 = 20.0;
 
     fn heuristic(a: Vec2, b: Vec2) -> f32 {
         a.distance(b)

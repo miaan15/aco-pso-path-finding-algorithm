@@ -5,9 +5,8 @@ use crate::{
     algorithm::{
         grid::{Grid, GridCell},
         problem::Problem,
-        solve::a_star::AStarStrategy,
     },
-    game::{algorithm_resource::AlgorithmResource, control::GameState},
+    game::{algorithm_resource::AlgorithmResource, async_pathfinding::PathfindingTask, control::GameState},
 };
 
 pub fn setup_game(mut commands: Commands) {
@@ -52,27 +51,30 @@ fn create_grid() -> Arc<Grid> {
 }
 
 pub fn run_pathfinding(
-    current_state: Res<State<GameState>>,
-    mut algorithm_resource: ResMut<AlgorithmResource>,
+    mut commands: Commands,
+    _current_state: Res<State<GameState>>,
+    algorithm_resource: Res<AlgorithmResource>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
-    if let (Some(start), Some(goal)) = (
+    if let (Some(_start), Some(_goal)) = (
         algorithm_resource.problem.start,
         algorithm_resource.problem.goal,
     ) {
-        let a_star = AStarStrategy {};
-        let path = a_star.path_finding(&algorithm_resource.problem);
+        let task = crate::game::async_pathfinding::start_pathfinding_thread(algorithm_resource.problem.clone());
 
-        let complete_path = match path {
-            Some(mut p) => {
-                p.insert(0, start);
-                p.push(goal);
-                Some(p)
-            }
-            None => Some(vec![start, goal]),
-        };
+        commands.insert_resource(task);
 
-        algorithm_resource.path = complete_path;
-        next_state.set(GameState::DoneRun);
+        next_state.set(GameState::SolvingAsync);
+
+        println!("Pathfinding started in background thread");
     }
+}
+
+pub fn cancel_pathfinding(
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    commands.remove_resource::<PathfindingTask>();
+    next_state.set(GameState::Idle);
+    println!("Pathfinding cancelled");
 }

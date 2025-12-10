@@ -7,6 +7,7 @@ pub enum GameState {
     SetStart,
     SetGoal,
     Solving,
+    SolvingAsync,
 
     Cancel,
     DoneRun,

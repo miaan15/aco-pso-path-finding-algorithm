@@ -36,6 +36,14 @@ pub fn handle_keyboard_input(
                 println!("State: SetGoal");
             }
         }
+        GameState::SolvingAsync => {
+            // Allow cancellation during async computation
+            if keyboard_input.just_pressed(KeyCode::KeyC) {
+                next_state.set(GameState::Cancel);
+                println!("State: Idle (cancelled async computation)");
+                return;
+            }
+        }
         _ => {}
     }
 }
