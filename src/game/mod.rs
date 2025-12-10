@@ -1,3 +1,8 @@
+mod plugins;
+mod system;
+
 pub mod prelude;
-pub mod plugins;
-pub mod system;
+
+pub mod grid_renderer;
+
+pub mod algorithm_resource;
