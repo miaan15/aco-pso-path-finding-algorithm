@@ -1,8 +1,6 @@
 use crate::game::control::GameState;
 use bevy::prelude::*;
 
-const SIZE: f32 = 10.0;
-
 pub fn handle_keyboard_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     current_state: Res<State<GameState>>,
@@ -64,7 +62,11 @@ pub fn handle_mouse_selection(
             .unwrap();
         let world_pos = Vec2::new(ray.origin.x, ray.origin.y);
 
-        let true_pos = Vec2::new((world_pos.x / SIZE).floor() * SIZE, (world_pos.y / SIZE).floor() * SIZE) + Vec2::splat(SIZE / 2.0);
+        let pixel_size = algorithm_resource.grid.pixel_size();
+        let true_pos = Vec2::new(
+            (world_pos.x / pixel_size).floor() * pixel_size,
+            (world_pos.y / pixel_size).floor() * pixel_size,
+        ) + Vec2::splat(pixel_size / 2.0);
 
         match current_state.get() {
             GameState::SetStart => {

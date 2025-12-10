@@ -115,7 +115,7 @@ impl AStarStrategy {
     }
 
     pub fn path_finding(&self, problem: &Problem) -> Option<Vec<Vec2>> {
-        let grid_map = problem.grid_map.clone();
+        let grid_map = problem.grid.clone();
         let start = problem.start.clone().unwrap();
         let goal = problem.goal.clone().unwrap();
 

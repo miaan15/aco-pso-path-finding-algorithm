@@ -13,17 +13,19 @@ pub struct Grid {
     width: usize,
     height: usize,
     cell_size: f32,
+    pixel_size: f32,
     root: Vec2,
     data: Vec<GridCell>,
 }
 
 impl Grid {
-    pub fn new(width: usize, height: usize, cell_size: f32, root: Vec2) -> Self {
+    pub fn new(width: usize, height: usize, cell_size: f32, pixel_size: f32, root: Vec2) -> Self {
         Self {
-            width: width,
-            height: height,
-            cell_size: cell_size,
-            root: root,
+            width,
+            height,
+            cell_size,
+            pixel_size,
+            root,
             data: vec![GridCell::Air; width * height],
         }
     }
@@ -33,6 +35,9 @@ impl Grid {
     }
     pub fn height(&self) -> usize {
         self.height
+    }
+    pub fn pixel_size(&self) -> f32 {
+        self.pixel_size
     }
 
     pub fn set(&mut self, x: usize, y: usize, val: GridCell) -> Option<()> {
