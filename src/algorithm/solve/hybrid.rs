@@ -1,6 +1,9 @@
 use crate::algorithm::problem::Problem;
 use bevy::prelude::*;
 
+use super::aco::*;
+use super::pso::*;
+
 pub struct HybridStrategy {}
 
 impl HybridStrategy {
