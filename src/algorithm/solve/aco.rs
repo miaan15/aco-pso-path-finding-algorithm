@@ -57,11 +57,14 @@ pub struct AcoStrategy {
 
     pub evaporation_coefficient: f64,
     pub deposit_constant: f64,
+    pub global_evaporation_coefficient: f64,
+    pub global_deposit_constant: f64,
 
     pub init_pheromone: f64,
 
     pub number_per_ant_group: u32,
     pub max_ant_group_try: u32,
+    pub number_ant_group: u32,
 }
 
 impl AcoStrategy {
@@ -71,80 +74,106 @@ impl AcoStrategy {
         let start_node = self.world_to_node_pos(start, problem).unwrap();
         let goal_node = self.world_to_node_pos(goal, problem).unwrap();
 
-        let mut pheromones: HashMap<Line, f64> = HashMap::new();
+        let mut global_pheromones: HashMap<Line, f64> = HashMap::new();
 
-        let mut tabu: Vec<HashSet<Node>> = Vec::new();
-        for _ in 0..self.number_per_ant_group {
-            let mut hs = HashSet::new();
-            hs.insert(start_node.clone());
-            tabu.push(hs);
-        }
+        for group_idx in 0..self.number_ant_group {
+            let mut pheromones: HashMap<Line, f64> = global_pheromones.clone();
 
-        let mut ants_cur_path: Vec<Vec<Node>> = Vec::new();
-        ants_cur_path.resize(self.number_per_ant_group as usize, Vec::new());
-        ants_cur_path
-            .iter_mut()
-            .for_each(|x| x.push(start_node.clone()));
+            let mut tabu: Vec<HashSet<Node>> = Vec::new();
+            for _ in 0..self.number_per_ant_group {
+                let mut hs = HashSet::new();
+                hs.insert(start_node.clone());
+                tabu.push(hs);
+            }
 
-        let mut ants_path_len: Vec<f64> = Vec::new();
-        ants_path_len.resize(self.number_per_ant_group as usize, 0.0);
+            let mut ants_cur_path: Vec<Vec<Node>> = Vec::new();
+            ants_cur_path.resize(self.number_per_ant_group as usize, Vec::new());
+            ants_cur_path
+                .iter_mut()
+                .for_each(|x| x.push(start_node.clone()));
 
-        for _ in 0..self.max_ant_group_try {
-            for ant_idx in 0..self.number_per_ant_group {
-                let cur_ant_node = ants_cur_path.get(ant_idx as usize).unwrap().last().unwrap();
-                if *cur_ant_node == goal_node {
-                    continue;
-                }
+            let mut ants_path_len: Vec<f64> = Vec::new();
+            ants_path_len.resize(self.number_per_ant_group as usize, 0.0);
 
-                let cur_tabu = tabu.get_mut(ant_idx as usize).unwrap();
+            for _ in 0..self.max_ant_group_try {
+                for ant_idx in 0..self.number_per_ant_group {
+                    let cur_ant_node = ants_cur_path.get(ant_idx as usize).unwrap().last().unwrap();
+                    if *cur_ant_node == goal_node {
+                        continue;
+                    }
 
-                let next_ant_node =
-                    self.calculate_next_node(cur_ant_node.clone(), &pheromones, &cur_tabu, problem);
-                let cur_line = Line::new(cur_ant_node.clone(), next_ant_node.clone());
+                    let cur_tabu = tabu.get_mut(ant_idx as usize).unwrap();
 
-                let cur_path_len = ants_path_len.get_mut(ant_idx as usize).unwrap();
-                *cur_path_len += Vec2::distance(
-                    self.node_to_world_pos(cur_ant_node.clone(), problem),
-                    self.node_to_world_pos(next_ant_node.clone(), problem),
-                ) as f64;
+                    let next_ant_node = self.calculate_next_node(
+                        cur_ant_node.clone(),
+                        &pheromones,
+                        &cur_tabu,
+                        problem,
+                    );
+                    let cur_line = Line::new(cur_ant_node.clone(), next_ant_node.clone());
 
-                ants_cur_path
-                    .get_mut(ant_idx as usize)
-                    .unwrap()
-                    .push(next_ant_node.clone());
-                cur_tabu.insert(next_ant_node.clone());
+                    let cur_path_len = ants_path_len.get_mut(ant_idx as usize).unwrap();
+                    *cur_path_len += Vec2::distance(
+                        self.node_to_world_pos(cur_ant_node.clone(), problem),
+                        self.node_to_world_pos(next_ant_node.clone(), problem),
+                    ) as f64;
 
-                if let Some(line_pheromone) = pheromones.get_mut(&cur_line) {
-                    *line_pheromone = (1.0 - self.evaporation_coefficient) * *line_pheromone
-                        + self.evaporation_coefficient
-                            * ((self.deposit_constant + 1.0) / (*cur_path_len + 1.0));
-                } else {
-                    pheromones.insert(
-                        cur_line.clone(),
-                        (1.0 - self.evaporation_coefficient) * self.init_pheromone
+                    ants_cur_path
+                        .get_mut(ant_idx as usize)
+                        .unwrap()
+                        .push(next_ant_node.clone());
+                    cur_tabu.insert(next_ant_node.clone());
+
+                    if let Some(line_pheromone) = pheromones.get_mut(&cur_line) {
+                        *line_pheromone = (1.0 - self.evaporation_coefficient) * *line_pheromone
                             + self.evaporation_coefficient
-                                * ((self.deposit_constant + 1.0) / (*cur_path_len + 1.0)),
+                                * ((self.deposit_constant + 1.0) / (*cur_path_len + 1.0));
+                    } else {
+                        pheromones.insert(
+                            cur_line.clone(),
+                            (1.0 - self.evaporation_coefficient) * self.init_pheromone
+                                + self.evaporation_coefficient
+                                    * ((self.deposit_constant + 1.0) / (*cur_path_len + 1.0)),
+                        );
+                    }
+                }
+            }
+
+            let mut best_path = ants_cur_path.first().unwrap();
+            let mut best_path_len = *ants_path_len.first().unwrap();
+            for ant_idx in 1..self.number_per_ant_group {
+                if ants_path_len[ant_idx as usize] > best_path_len {
+                    best_path = ants_cur_path.get(ant_idx as usize).unwrap().as_ref();
+                    best_path_len = ants_path_len[ant_idx as usize];
+                }
+            }
+
+            best_path.windows(2).for_each(|x| {
+                if let Some(p) = global_pheromones.get_mut(&Line::new(x[0].clone(), x[1].clone())) {
+                    *p = (1.0 - self.global_evaporation_coefficient) * *p
+                        + self.global_evaporation_coefficient
+                            * ((self.global_deposit_constant + 1.0) / (best_path_len + 1.0));
+                } else {
+                    global_pheromones.insert(
+                        Line::new(x[0].clone(), x[1].clone()),
+                        (1.0 - self.global_evaporation_coefficient) * self.init_pheromone
+                            + self.global_evaporation_coefficient
+                                * ((self.global_deposit_constant + 1.0) / (best_path_len + 1.0)),
                     );
                 }
+            });
+
+            if group_idx == self.number_ant_group - 1 {
+                return Some(
+                    best_path
+                        .iter()
+                        .map(|x| self.node_to_world_pos(x.clone(), problem))
+                        .collect(),
+                );
             }
         }
 
-        let mut best_path = ants_cur_path.first().unwrap();
-        let mut best_path_len = *ants_path_len.first().unwrap();
-        for ant_idx in 1..self.number_per_ant_group {
-            if ants_path_len[ant_idx as usize] > best_path_len {
-                best_path = ants_cur_path.get(ant_idx as usize).unwrap().as_ref();
-                best_path_len = ants_path_len[ant_idx as usize];
-            }
-        }
-
-        // Combine with multiple group
-
-        let res: Vec<Vec2> = best_path
-            .iter()
-            .map(|x| self.node_to_world_pos(x.clone(), problem))
-            .collect();
-        Some(res)
+        None
     }
 
     fn calculate_next_node(

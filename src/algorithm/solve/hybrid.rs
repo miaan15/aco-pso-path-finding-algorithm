@@ -14,10 +14,13 @@ impl HybridStrategy {
             beta: 1.0,
             elicitation_constant: 1000.0,
             evaporation_coefficient: 0.4,
+            global_deposit_constant: 6000.0,
+            global_evaporation_coefficient: 0.2,
             deposit_constant: 6000.0,
             init_pheromone: 1.0,
             number_per_ant_group: 50,
             max_ant_group_try: 100,
+            number_ant_group: 10,
         };
 
         aco.path_finding(problem)
