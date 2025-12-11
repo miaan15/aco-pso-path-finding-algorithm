@@ -96,8 +96,10 @@ impl AcoStrategy {
                     continue;
                 }
 
+                let cur_tabu = tabu.get_mut(ant_idx as usize).unwrap();
+
                 let next_ant_node =
-                    self.calculate_next_node(cur_ant_node.clone(), &pheromones, problem);
+                    self.calculate_next_node(cur_ant_node.clone(), &pheromones, &cur_tabu, problem);
                 let cur_line = Line::new(cur_ant_node.clone(), next_ant_node.clone());
 
                 let cur_path_len = ants_path_len.get_mut(ant_idx as usize).unwrap();
@@ -110,6 +112,7 @@ impl AcoStrategy {
                     .get_mut(ant_idx as usize)
                     .unwrap()
                     .push(next_ant_node.clone());
+                cur_tabu.insert(next_ant_node.clone());
 
                 if let Some(line_pheromone) = pheromones.get_mut(&cur_line) {
                     *line_pheromone = (1.0 - self.evaporation_coefficient) * *line_pheromone
@@ -148,6 +151,7 @@ impl AcoStrategy {
         &self,
         node: Node,
         pheromones: &HashMap<Line, f64>,
+        tabu: &HashSet<Node>,
         problem: &Problem,
     ) -> Node {
         let is_exploit = AcoStrategy::roll(vec![
@@ -158,11 +162,26 @@ impl AcoStrategy {
         let mut next_values: Vec<f64> = Vec::new();
         let next_nodes = self.next_node_list(node.clone());
         for nxnode in next_nodes.iter() {
-            next_values.push(self.get_path_value(
-                Line::new(node.clone(), nxnode.clone()),
-                pheromones,
-                problem,
-            ));
+            if tabu.contains(nxnode) {
+                next_values.push(0.000001);
+                continue;
+            }
+
+            let wcur = self.node_to_world_pos(node.clone(), problem);
+            let wnext = self.node_to_world_pos(nxnode.clone(), problem);
+            let ray = Ray {
+                root: wcur,
+                dir: wnext - wcur,
+            };
+            let hit = problem.grid.raycast(ray);
+
+            let x = if hit.map_or(true, |x| x.dist > Vec2::distance(wcur, wnext)) {
+                self.get_path_value(Line::new(node.clone(), nxnode.clone()), pheromones, problem)
+            } else {
+                0.000000001
+            };
+
+            next_values.push(x);
         }
 
         let mut res: Node = next_nodes[0].clone();
@@ -187,13 +206,20 @@ impl AcoStrategy {
         pheromones: &HashMap<Line, f64>,
         problem: &Problem,
     ) -> f64 {
+        println!(
+            "a {} : b {}",
+            (*pheromones.get(&line).unwrap_or(&self.init_pheromone)).powf(self.alpha),
+            self.get_heuristic(line.to.clone(), problem).powf(self.beta)
+        );
+
         (*pheromones.get(&line).unwrap_or(&self.init_pheromone)).powf(self.alpha)
             * self.get_heuristic(line.to, problem).powf(self.beta)
     }
     fn get_heuristic(&self, node: Node, problem: &Problem) -> f64 {
         let wpos = self.node_to_world_pos(node, problem);
         let goal = problem.goal.unwrap();
-        self.elicitation_constant / Vec2::distance(wpos, goal) as f64
+        (self.elicitation_constant + self.elicitation_constant)
+            / (Vec2::distance(wpos, goal) as f64 + self.elicitation_constant)
     }
 }
 

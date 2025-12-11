@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
-use crate::algorithm::{problem::Problem, solve::a_star::AStarStrategy};
+use crate::algorithm::{problem::Problem, solve::hybrid::HybridStrategy};
 use crate::game::control::GameState;
 
 #[derive(Resource)]
@@ -24,7 +24,7 @@ impl Default for PathfindingTask {
 impl Clone for PathfindingTask {
     fn clone(&self) -> Self {
         Self {
-            handle: None, // Don't clone the thread handle
+            handle: None,
             result: self.result.clone(),
             is_complete: self.is_complete.clone(),
         }
@@ -38,8 +38,8 @@ pub fn start_pathfinding_thread(problem: Problem) -> PathfindingTask {
     let is_complete_clone = is_complete.clone();
 
     let handle = thread::spawn(move || {
-        let a_star = AStarStrategy {};
-        let path = a_star.path_finding(&problem);
+        let strategy = HybridStrategy {};
+        let path = strategy.path_finding(&problem);
 
         // Store the result
         if let Ok(mut result_guard) = result_clone.lock() {

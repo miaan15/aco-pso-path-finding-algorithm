@@ -1,11 +1,25 @@
-use crate::algorithm::problem::Problem;
+use crate::algorithm::{
+    problem::Problem,
+    solve::aco::{self, AcoStrategy},
+};
 use bevy::prelude::*;
-
-use super::aco::*;
-use super::pso::*;
 
 pub struct HybridStrategy {}
 
 impl HybridStrategy {
-    pub fn path_finding(&self, problem: &Problem) -> Option<Vec<Vec2>> { todo!() }
+    pub fn path_finding(&self, problem: &Problem) -> Option<Vec<Vec2>> {
+        let aco = AcoStrategy {
+            exploitation_chance: 0.3,
+            alpha: 1.0,
+            beta: 10.0,
+            elicitation_constant: 60.0,
+            evaporation_coefficient: 0.4,
+            deposit_constant: 60.0,
+            init_pheromone: 1.0,
+            number_per_ant_group: 10,
+            max_ant_group_try: 1000,
+        };
+
+        aco.path_finding(problem)
+    }
 }
