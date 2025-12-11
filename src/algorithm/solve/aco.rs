@@ -74,7 +74,7 @@ impl AcoStrategy {
         let mut pheromones: HashMap<Line, f64> = HashMap::new();
 
         let mut tabu: Vec<HashSet<Node>> = Vec::new();
-        for ant_idx in 0..self.number_per_ant_group {
+        for _ in 0..self.number_per_ant_group {
             let mut hs = HashSet::new();
             hs.insert(start_node.clone());
             tabu.push(hs);
@@ -197,11 +197,7 @@ impl AcoStrategy {
             return 0.0000001;
         }
 
-        if !self.has_sight(
-            self.node_to_world_pos(line.from.clone(), problem),
-            self.node_to_world_pos(line.to.clone(), problem),
-            problem,
-        ) {
+        if !self.node_has_sight(line.from.clone(), line.to.clone(), problem) {
             return 0.0000000001;
         }
 
