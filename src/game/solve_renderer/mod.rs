@@ -1,8 +1,8 @@
 mod component;
 mod system;
 
-pub use system::{render_start_goal, render_path};
-pub use component::{StartPoint, GoalPoint, PathRenderer};
+pub use system::{render_start_goal, render_path, render_temporary_lines, temporary_line_render, temp_debug_line};
+pub use component::{StartPoint, GoalPoint, PathRenderer, TemporaryLineRenderer, TemporaryLines};
 
 use bevy::prelude::*;
 
@@ -10,8 +10,10 @@ pub struct SolvePlugin;
 
 impl Plugin for SolvePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, render_start_goal)
-            .add_systems(Update, render_path);
+        app.init_resource::<TemporaryLines>()
+            .add_systems(Update, render_start_goal)
+            .add_systems(Update, render_path)
+            .add_systems(Update, render_temporary_lines);
     }
 }
 

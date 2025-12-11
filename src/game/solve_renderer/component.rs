@@ -18,6 +18,16 @@ pub struct PathRenderer {
     pub color: Color,
 }
 
+#[derive(Component)]
+pub struct TemporaryLineRenderer {
+    pub timer: Timer,
+}
+
+#[derive(Resource, Default)]
+pub struct TemporaryLines {
+    pub lines: Vec<(Vec2, Vec2)>,
+}
+
 impl PointRenderer {
     pub fn new(radius: f32, color: Color) -> Self {
         Self { width: radius, color }

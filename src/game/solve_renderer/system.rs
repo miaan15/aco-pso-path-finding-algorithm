@@ -1,4 +1,4 @@
-use super::component::{GoalPoint, PathRenderer, PointRenderer, StartPoint};
+use super::component::{GoalPoint, PathRenderer, PointRenderer, StartPoint, TemporaryLineRenderer, TemporaryLines};
 use crate::game::algorithm_resource::AlgorithmResource;
 use bevy::prelude::*;
 
@@ -88,6 +88,64 @@ pub fn render_path(
                 });
             });
         }
+    }
+}
+
+pub fn render_temporary_lines(
+    mut commands: Commands,
+    mut query: Query<(Entity, &mut TemporaryLineRenderer)>,
+    time: Res<Time>,
+    mut temp_lines: ResMut<TemporaryLines>,
+) {
+    // Spawn new temporary lines from the resource
+    for (start, end) in temp_lines.lines.drain(..) {
+        temporary_line_render(&mut commands, start, end);
+    }
+
+    // Update timers and remove expired lines
+    for (entity, mut temp_line) in query.iter_mut() {
+        temp_line.timer.tick(time.delta());
+        if temp_line.timer.is_finished() {
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
+pub fn temporary_line_render(
+    commands: &mut Commands,
+    start: Vec2,
+    end: Vec2,
+) {
+    // Calculate line properties
+    let direction = end - start;
+    let length = direction.length();
+    let angle = f32::atan2(direction.y, direction.x);
+
+    commands.spawn((
+        TemporaryLineRenderer {
+            timer: Timer::from_seconds(1.0, TimerMode::Once),
+        },
+        Transform {
+            translation: (start + end).extend(0.5) / 2.0,
+            rotation: Quat::from_rotation_z(angle),
+            scale: Vec3::new(length, 1.0, 1.0),
+        },
+        Visibility::default(),
+    )).with_children(|parent| {
+        parent.spawn(Sprite {
+            color: Color::srgb(0.7, 0.7, 0.7), // Light grey
+            custom_size: Some(Vec2::new(1.0, 2.0)),
+            ..default()
+        });
+    });
+}
+
+/// Convenience function to add a temporary debug line from anywhere.
+/// This adds the line to the TemporaryLines resource, which will be rendered in the next frame.
+/// Usage: `temp_debug_line(world, Vec2::new(0.0, 0.0), Vec2::new(100.0, 100.0));`
+pub fn temp_debug_line(world: &mut World, start: Vec2, end: Vec2) {
+    if let Some(mut temp_lines) = world.get_resource_mut::<TemporaryLines>() {
+        temp_lines.lines.push((start, end));
     }
 }
 
