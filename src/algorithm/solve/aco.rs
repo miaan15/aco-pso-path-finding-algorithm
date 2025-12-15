@@ -142,33 +142,41 @@ impl AcoStrategy {
                 }
             }
 
-            let mut best_path = ants_cur_path.first().unwrap();
-            let mut best_path_len = *ants_path_len.first().unwrap();
-            for ant_idx in 1..self.number_per_ant_group {
-                if ants_path_len[ant_idx as usize] < best_path_len {
-                    best_path = ants_cur_path.get(ant_idx as usize).unwrap().as_ref();
+            let mut best_path = None;
+            let mut best_path_len = f64::INFINITY;
+            for ant_idx in 0..self.number_per_ant_group {
+                let path = &ants_cur_path[ant_idx as usize];
+                if path.last() == Some(&goal_node)
+                    && ants_path_len[ant_idx as usize] < best_path_len
+                {
+                    best_path = Some(path);
                     best_path_len = ants_path_len[ant_idx as usize];
                 }
             }
 
-            best_path.windows(2).for_each(|x| {
-                if let Some(p) = global_pheromones.get_mut(&Line::new(x[0].clone(), x[1].clone())) {
-                    *p = (1.0 - self.global_evaporation_coefficient) * *p
-                        + self.global_evaporation_coefficient
-                            * ((self.global_deposit_constant + 1.0) / (best_path_len + 1.0));
-                } else {
-                    global_pheromones.insert(
-                        Line::new(x[0].clone(), x[1].clone()),
-                        (1.0 - self.global_evaporation_coefficient) * self.init_pheromone
+            if let Some(path) = best_path {
+                path.windows(2).for_each(|x| {
+                    if let Some(p) =
+                        global_pheromones.get_mut(&Line::new(x[0].clone(), x[1].clone()))
+                    {
+                        *p = (1.0 - self.global_evaporation_coefficient) * *p
                             + self.global_evaporation_coefficient
-                                * ((self.global_deposit_constant + 1.0) / (best_path_len + 1.0)),
-                    );
-                }
-            });
+                                * ((self.global_deposit_constant + 1.0) / (best_path_len + 1.0));
+                    } else {
+                        global_pheromones.insert(
+                            Line::new(x[0].clone(), x[1].clone()),
+                            (1.0 - self.global_evaporation_coefficient) * self.init_pheromone
+                                + self.global_evaporation_coefficient
+                                    * ((self.global_deposit_constant + 1.0)
+                                        / (best_path_len + 1.0)),
+                        );
+                    }
+                });
 
-            if best_path_len < global_best_len {
-                global_best_path = Some(best_path.clone());
-                global_best_len = best_path_len;
+                if best_path_len < global_best_len {
+                    global_best_path = Some(path.clone());
+                    global_best_len = best_path_len;
+                }
             }
         }
 
