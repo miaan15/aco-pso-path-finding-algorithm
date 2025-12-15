@@ -76,6 +76,9 @@ impl AcoStrategy {
 
         let mut global_pheromones: HashMap<Line, f64> = HashMap::new();
 
+        let mut global_best_path: Option<Vec<Node>> = None;
+        let mut global_best_len = f64::INFINITY;
+
         for group_idx in 0..self.number_ant_group {
             let mut pheromones: HashMap<Line, f64> = global_pheromones.clone();
 
@@ -142,7 +145,7 @@ impl AcoStrategy {
             let mut best_path = ants_cur_path.first().unwrap();
             let mut best_path_len = *ants_path_len.first().unwrap();
             for ant_idx in 1..self.number_per_ant_group {
-                if ants_path_len[ant_idx as usize] > best_path_len {
+                if ants_path_len[ant_idx as usize] < best_path_len {
                     best_path = ants_cur_path.get(ant_idx as usize).unwrap().as_ref();
                     best_path_len = ants_path_len[ant_idx as usize];
                 }
@@ -163,17 +166,17 @@ impl AcoStrategy {
                 }
             });
 
-            if group_idx == self.number_ant_group - 1 {
-                return Some(
-                    best_path
-                        .iter()
-                        .map(|x| self.node_to_world_pos(x.clone(), problem))
-                        .collect(),
-                );
+            if best_path_len < global_best_len {
+                global_best_path = Some(best_path.clone());
+                global_best_len = best_path_len;
             }
         }
 
-        None
+        global_best_path.map(|path| {
+            path.iter()
+                .map(|x| self.node_to_world_pos(x.clone(), problem))
+                .collect()
+        })
     }
 
     fn calculate_next_node(

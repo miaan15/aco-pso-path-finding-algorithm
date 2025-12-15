@@ -21,6 +21,7 @@ pub fn on_cancel(
 
 pub fn on_done_run(mut next_state: ResMut<NextState<GameState>>) {
     next_state.set(GameState::Idle);
+    println!("=========================================================");
     println!("Done Run");
 }
 

@@ -19,8 +19,8 @@ impl HybridStrategy {
             deposit_constant: 6000.0,
             init_pheromone: 1.0,
             number_per_ant_group: 50,
-            max_ant_group_try: 100,
-            number_ant_group: 10,
+            max_ant_group_try: 1000,
+            number_ant_group: 30,
         };
 
         aco.path_finding(problem)
