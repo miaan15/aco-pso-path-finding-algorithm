@@ -38,15 +38,13 @@ pub fn start_pathfinding_thread(problem: Problem) -> PathfindingTask {
     let is_complete_clone = is_complete.clone();
 
     let handle = thread::spawn(move || {
-        let strategy = HybridStrategy::default();
-        let path = strategy.path_finding(&problem);
+        let strategy = HybridStrategy::new(problem.grid.clone());
+        let path = strategy.path_finding(problem.start, problem.goal);
 
-        // Store the result
         if let Ok(mut result_guard) = result_clone.lock() {
             *result_guard = Some(path);
         }
 
-        // Mark as complete
         if let Ok(mut complete_guard) = is_complete_clone.lock() {
             *complete_guard = true;
         }

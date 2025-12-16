@@ -66,7 +66,7 @@ pub fn run_pathfinding(
 
         next_state.set(GameState::SolvingAsync);
 
-        println!("Pathfinding started in background thread");
+        println!("Pathfinding started");
     }
 }
 

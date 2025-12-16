@@ -1,9 +1,10 @@
-use crate::algorithm::{problem::Problem, types::Ray};
+use crate::algorithm::{types::Ray, grid::Grid};
 use bevy::prelude::*;
 use rand::Rng;
 use std::{
     collections::{HashMap, HashSet},
     hash::Hash,
+    sync::Arc,
 };
 
 #[derive(Debug, Clone, Eq)]
@@ -49,6 +50,7 @@ impl PartialEq for Line {
 }
 
 pub struct HybridStrategy {
+    pub grid: Arc<Grid>,
     pub exploitation_chance: f64,
     pub alpha: f64,
     pub beta: f64,
@@ -67,9 +69,10 @@ pub struct HybridStrategy {
     pub number_ant_group: u32,
 }
 
-impl Default for HybridStrategy {
-    fn default() -> Self {
+impl HybridStrategy {
+    pub fn new(grid: Arc<Grid>) -> Self {
         Self {
+            grid,
             exploitation_chance: 0.5,
             alpha: 1.0,
             beta: 1.0,
@@ -87,11 +90,12 @@ impl Default for HybridStrategy {
 }
 
 impl HybridStrategy {
-    pub fn path_finding(&self, problem: &Problem) -> Option<Vec<Vec2>> {
-        let start = problem.start.unwrap();
-        let goal = problem.goal.unwrap();
-        let start_node = self.world_to_node_pos(start, problem).unwrap();
-        let goal_node = self.world_to_node_pos(goal, problem).unwrap();
+    pub fn path_finding(&self, start: Option<Vec2>, goal: Option<Vec2>) -> Option<Vec<Vec2>> {
+        let start = start?;
+        let goal = goal?;
+
+        let start_node = self.world_to_node_pos(start).unwrap();
+        let goal_node = self.world_to_node_pos(goal).unwrap();
 
         let mut global_pheromones: HashMap<Line, f64> = HashMap::new();
 
@@ -130,14 +134,14 @@ impl HybridStrategy {
                         cur_ant_node.clone(),
                         &pheromones,
                         &cur_tabu,
-                        problem,
+                        goal,
                     );
                     let cur_line = Line::new(cur_ant_node.clone(), next_ant_node.clone());
 
                     let cur_path_len = ants_path_len.get_mut(ant_idx as usize).unwrap();
                     *cur_path_len += Vec2::distance(
-                        self.node_to_world_pos(cur_ant_node.clone(), problem),
-                        self.node_to_world_pos(next_ant_node.clone(), problem),
+                        self.node_to_world_pos(cur_ant_node.clone()),
+                        self.node_to_world_pos(next_ant_node.clone()),
                     ) as f64;
 
                     ants_cur_path
@@ -201,7 +205,7 @@ impl HybridStrategy {
 
         global_best_path.map(|path| {
             path.iter()
-                .map(|x| self.node_to_world_pos(x.clone(), problem))
+                .map(|x| self.node_to_world_pos(x.clone()))
                 .collect()
         })
     }
@@ -211,7 +215,7 @@ impl HybridStrategy {
         node: Node,
         pheromones: &HashMap<Line, f64>,
         tabu: &HashSet<Node>,
-        problem: &Problem,
+        goal: Vec2,
     ) -> Node {
         let is_exploit = HybridStrategy::roll(vec![
             self.exploitation_chance,
@@ -225,7 +229,7 @@ impl HybridStrategy {
                 Line::new(node.clone(), nxnode.clone()),
                 pheromones,
                 tabu,
-                problem,
+                goal,
             ));
         }
 
@@ -250,40 +254,39 @@ impl HybridStrategy {
         line: Line,
         pheromones: &HashMap<Line, f64>,
         tabu: &HashSet<Node>,
-        problem: &Problem,
+        goal: Vec2,
     ) -> f64 {
         if tabu.contains(&line.to) {
             return 0.0000001;
         }
 
-        if !self.node_has_sight(line.from.clone(), line.to.clone(), problem) {
+        if !self.node_has_sight(line.from.clone(), line.to.clone()) {
             return 0.0000000001;
         }
 
         (*pheromones.get(&line).unwrap_or(&self.init_pheromone)).powf(self.alpha)
-            * self.get_heuristic(line.to.clone(), problem).powf(self.beta)
+            * self.get_heuristic(line.to.clone(), goal).powf(self.beta)
     }
-    fn get_heuristic(&self, node: Node, problem: &Problem) -> f64 {
-        let wpos = self.node_to_world_pos(node, problem);
-        let goal = problem.goal.unwrap();
+    fn get_heuristic(&self, node: Node, goal: Vec2) -> f64 {
+        let wpos = self.node_to_world_pos(node);
         (self.elicitation_constant + 1.0) / (Vec2::distance(wpos, goal) as f64 + 1.0)
     }
 }
 
 impl HybridStrategy {
-    fn world_to_node_pos(&self, wpos: Vec2, problem: &Problem) -> Option<Node> {
+    fn world_to_node_pos(&self, wpos: Vec2) -> Option<Node> {
         if wpos.is_nan() {
             None
         } else {
-            let pixel_size = problem.grid.pixel_size();
+            let pixel_size = self.grid.pixel_size();
             Some(Node::new(
                 ((wpos.x - pixel_size / 2.0) / pixel_size).round() as i32,
                 ((wpos.y - pixel_size / 2.0) / pixel_size).round() as i32,
             ))
         }
     }
-    fn node_to_world_pos(&self, npos: Node, problem: &Problem) -> Vec2 {
-        let pixel_size = problem.grid.pixel_size();
+    fn node_to_world_pos(&self, npos: Node) -> Vec2 {
+        let pixel_size = self.grid.pixel_size();
         Vec2::new(
             npos.pos.0 as f32 * pixel_size + pixel_size / 2.0,
             npos.pos.1 as f32 * pixel_size + pixel_size / 2.0,
@@ -303,15 +306,14 @@ impl HybridStrategy {
         v
     }
 
-    fn node_has_sight(&self, nfrom: Node, nto: Node, problem: &Problem) -> bool {
+    fn node_has_sight(&self, nfrom: Node, nto: Node) -> bool {
         self.has_sight(
-            self.node_to_world_pos(nfrom, problem),
-            self.node_to_world_pos(nto, problem),
-            problem,
+            self.node_to_world_pos(nfrom),
+            self.node_to_world_pos(nto),
         )
     }
 
-    fn has_sight(&self, from: Vec2, to: Vec2, problem: &Problem) -> bool {
+    fn has_sight(&self, from: Vec2, to: Vec2) -> bool {
         let direction = (to - from).normalize_or_zero();
         let distance = from.distance(to);
         if distance == 0.0 {
@@ -323,8 +325,7 @@ impl HybridStrategy {
             dir: direction,
         };
 
-        problem
-            .grid
+        self.grid
             .raycast(ray)
             .map_or(true, |hit| hit.dist >= distance)
     }
