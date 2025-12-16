@@ -38,7 +38,7 @@ pub fn start_pathfinding_thread(problem: Problem) -> PathfindingTask {
     let is_complete_clone = is_complete.clone();
 
     let handle = thread::spawn(move || {
-        let strategy = HybridStrategy::new(problem.grid.clone());
+        let mut strategy = HybridStrategy::new(problem.grid.clone());
         let path = strategy.path_finding(problem.start, problem.goal);
 
         if let Ok(mut result_guard) = result_clone.lock() {
