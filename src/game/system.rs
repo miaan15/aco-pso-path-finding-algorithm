@@ -6,7 +6,7 @@ use crate::{
         grid::{Grid, GridCell},
         problem::Problem,
     },
-    game::{algorithm_resource::AlgorithmResource, async_pathfinding::PathfindingTask, control::GameState},
+    game::{algorithm_resource::AlgorithmResource, control::GameState},
 };
 
 pub fn setup_game(commands: Commands) {
@@ -48,33 +48,4 @@ fn create_grid() -> Arc<Grid> {
     }
 
     Arc::new(grid)
-}
-
-pub fn run_pathfinding(
-    mut commands: Commands,
-    _current_state: Res<State<GameState>>,
-    algorithm_resource: Res<AlgorithmResource>,
-    mut next_state: ResMut<NextState<GameState>>,
-) {
-    if let (Some(_start), Some(_goal)) = (
-        algorithm_resource.problem.start,
-        algorithm_resource.problem.goal,
-    ) {
-        let task = crate::game::async_pathfinding::start_pathfinding_thread(algorithm_resource.problem.clone());
-
-        commands.insert_resource(task);
-
-        next_state.set(GameState::SolvingAsync);
-
-        println!("Pathfinding started");
-    }
-}
-
-pub fn cancel_pathfinding(
-    mut commands: Commands,
-    mut next_state: ResMut<NextState<GameState>>,
-) {
-    commands.remove_resource::<PathfindingTask>();
-    next_state.set(GameState::Idle);
-    println!("Pathfinding cancelled");
 }

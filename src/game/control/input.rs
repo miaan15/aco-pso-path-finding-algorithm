@@ -8,37 +8,22 @@ pub fn handle_keyboard_input(
 ) {
     if keyboard_input.just_pressed(KeyCode::KeyC) {
         next_state.set(GameState::Cancel);
-        println!("State: Idle (cancelled)");
         return;
     }
 
     match current_state.get() {
         GameState::Idle => {
-            if keyboard_input.just_pressed(KeyCode::Space) {
-                next_state.set(GameState::Solving);
-                println!("State: Loading (running algorithm)");
-            } else if keyboard_input.just_pressed(KeyCode::Digit1) {
+            if keyboard_input.just_pressed(KeyCode::Digit1) {
                 next_state.set(GameState::SetStart);
-                println!("State: SetStart");
             } else if keyboard_input.just_pressed(KeyCode::Digit2) {
                 next_state.set(GameState::SetGoal);
-                println!("State: SetGoal");
             }
         }
         GameState::SetStart | GameState::SetGoal => {
             if keyboard_input.just_pressed(KeyCode::Digit1) {
                 next_state.set(GameState::SetStart);
-                println!("State: SetStart");
             } else if keyboard_input.just_pressed(KeyCode::Digit2) {
                 next_state.set(GameState::SetGoal);
-                println!("State: SetGoal");
-            }
-        }
-        GameState::SolvingAsync => {
-            if keyboard_input.just_pressed(KeyCode::KeyC) {
-                next_state.set(GameState::Cancel);
-                println!("State: Idle (cancelled async computation)");
-                return;
             }
         }
         _ => {}

@@ -6,11 +6,7 @@ pub enum GameState {
     Idle,
     SetStart,
     SetGoal,
-    Solving,
-    SolvingAsync,
-
     Cancel,
-    DoneRun,
     DoneStart,
     DoneGoal,
 }
