@@ -31,7 +31,7 @@ pub fn create_algorithm_resource() -> AlgorithmResource {
 }
 
 fn create_grid() -> Arc<Grid> {
-    let mut grid = Grid::new(20, 15, 60.0, 30.0, Vec2::new(-600.0, -400.0));
+    let mut grid = Grid::new(20, 15, 60.0, 20.0, Vec2::new(-600.0, -400.0));
 
     for x in 0..grid.width() {
         grid.set(x, 0, GridCell::Wall);

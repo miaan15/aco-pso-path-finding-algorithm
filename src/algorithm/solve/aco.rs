@@ -79,7 +79,7 @@ impl AcoStrategy {
         let mut global_best_path: Option<Vec<Node>> = None;
         let mut global_best_len = f64::INFINITY;
 
-        for group_idx in 0..self.number_ant_group {
+        for _ in 0..self.number_ant_group {
             let mut pheromones: HashMap<Line, f64> = global_pheromones.clone();
 
             let mut tabu: Vec<HashSet<Node>> = Vec::new();
