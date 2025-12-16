@@ -1,10 +1,13 @@
 use crate::game::control::GameState;
+use crate::game::pathfinding_system::{PathfindingStrategy, reset_pathfinding};
 use crate::game::solve_renderer::{GoalPoint, StartPoint, render_start_goal};
 use bevy::prelude::*;
 
 pub fn on_cancel(
+    mut strategy_resource: ResMut<PathfindingStrategy>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
+    reset_pathfinding(strategy_resource);
     next_state.set(GameState::Idle);
     println!("Cancel");
 }

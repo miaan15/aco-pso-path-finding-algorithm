@@ -96,6 +96,12 @@ impl HybridStrategy {
 }
 
 impl HybridStrategy {
+    pub fn reset(&mut self) {
+        self.global_pheromones.clear();
+        self.global_best_path = None;
+        self.global_best_len = f64::INFINITY;
+    }
+
     pub fn path_finding(&mut self, start: Option<Vec2>, goal: Option<Vec2>) -> Option<Vec<Vec2>> {
         let start = start?;
         let goal = goal?;
@@ -193,6 +199,7 @@ impl HybridStrategy {
             if best_path_len < self.global_best_len {
                 self.global_best_path = Some(path.clone());
                 self.global_best_len = best_path_len;
+                println!("Better path found");
             }
         }
 

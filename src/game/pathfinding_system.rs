@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use crate::algorithm::solve::hybrid::HybridStrategy;
+use bevy::prelude::*;
 use std::sync::Arc;
 
 #[derive(Resource)]
@@ -23,10 +23,19 @@ pub fn update_pathfinding(
     let goal = algorithm_resource.problem.goal;
 
     if let (Some(start), Some(goal)) = (start, goal) {
-        let path = strategy_resource.strategy.path_finding(Some(start), Some(goal));
+        let path = strategy_resource
+            .strategy
+            .path_finding(Some(start), Some(goal));
 
         if algorithm_resource.path != path {
             algorithm_resource.path = path;
         }
     }
+}
+
+
+pub fn reset_pathfinding(
+    mut strategy_resource: ResMut<PathfindingStrategy>,
+) {
+    strategy_resource.strategy.reset();
 }
