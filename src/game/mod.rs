@@ -6,5 +6,7 @@ mod plugins;
 mod system;
 mod pathfinding_system;
 mod click_position;
+mod timer;
+mod debug_system;
 
 pub mod prelude;

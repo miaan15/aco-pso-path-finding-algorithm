@@ -2,14 +2,16 @@ use crate::game::control::GameState;
 use crate::game::pathfinding_system::{PathfindingStrategy, reset_pathfinding};
 use crate::game::solve_renderer::{GoalPoint, StartPoint, render_start_goal};
 use crate::game::click_position::ClickPosition;
+use crate::game::timer::AlgorithmTimers;
 use crate::algorithm::grid::GridCell;
 use bevy::prelude::*;
 
 pub fn on_cancel(
     mut strategy_resource: ResMut<PathfindingStrategy>,
+    mut timers: ResMut<AlgorithmTimers>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
-    reset_pathfinding(strategy_resource);
+    reset_pathfinding(strategy_resource, timers);
     next_state.set(GameState::Idle);
     println!("Cancel");
 }

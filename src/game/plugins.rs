@@ -3,6 +3,8 @@ use crate::game::grid_renderer::GridPlugin;
 use crate::game::solve_renderer::SolvePlugin;
 use crate::game::system::*;
 use crate::game::pathfinding_system::{PathfindingStrategy, update_pathfinding};
+use crate::game::timer::AlgorithmTimers;
+use crate::game::debug_system::log_timing_info;
 use bevy::prelude::*;
 
 pub struct GameScenePlugin;
@@ -14,8 +16,9 @@ impl Plugin for GameScenePlugin {
 
         app.insert_resource(algorithm_resource)
             .insert_resource(pathfinding_strategy)
+            .insert_resource(AlgorithmTimers::default())
             .add_systems(Startup, setup_game)
-            .add_systems(Update, update_pathfinding)
+            .add_systems(Update, (update_pathfinding, log_timing_info).chain())
             .add_plugins(GridPlugin)
             .add_plugins(ControlPlugin)
             .add_plugins(SolvePlugin)
