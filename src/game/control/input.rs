@@ -20,7 +20,7 @@ pub fn handle_keyboard_input(
                 next_state.set(GameState::SetGoal);
             } else if keyboard_input.just_pressed(KeyCode::KeyE) {
                 next_state.set(GameState::PlaceMode);
-            } else if keyboard_input.just_pressed(KeyCode::KeyW) {
+            } else if keyboard_input.just_pressed(KeyCode::KeyD) {
                 next_state.set(GameState::DeleteMode);
             }
         }
@@ -31,7 +31,7 @@ pub fn handle_keyboard_input(
                 next_state.set(GameState::SetGoal);
             } else if keyboard_input.just_pressed(KeyCode::KeyE) {
                 next_state.set(GameState::PlaceMode);
-            } else if keyboard_input.just_pressed(KeyCode::KeyW) {
+            } else if keyboard_input.just_pressed(KeyCode::KeyD) {
                 next_state.set(GameState::DeleteMode);
             }
         }
@@ -42,7 +42,7 @@ pub fn handle_keyboard_input(
                 next_state.set(GameState::SetGoal);
             } else if keyboard_input.just_pressed(KeyCode::KeyE) {
                 next_state.set(GameState::PlaceMode);
-            } else if keyboard_input.just_pressed(KeyCode::KeyW) {
+            } else if keyboard_input.just_pressed(KeyCode::KeyD) {
                 next_state.set(GameState::DeleteMode);
             }
         }

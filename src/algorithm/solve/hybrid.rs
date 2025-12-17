@@ -143,6 +143,22 @@ impl HybridStrategy {
             self.cache_goal = Some(goal.clone());
         }
 
+        if let Some(ref path) = self.global_best_path {
+            let mut path_blocked = false;
+            for window in path.windows(2) {
+                let from_world = self.node_to_world_pos(window[0].clone());
+                let to_world = self.node_to_world_pos(window[1].clone());
+                if !self.has_sight(from_world, to_world) {
+                    path_blocked = true;
+                    break;
+                }
+            }
+            if path_blocked {
+                self.global_best_len = f64::INFINITY;
+                self.global_best_path = None;
+            }
+        }
+
         let start_node = self.world_to_node_pos(start).unwrap();
         let goal_node = self.world_to_node_pos(goal).unwrap();
 

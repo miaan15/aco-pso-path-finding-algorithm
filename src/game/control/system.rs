@@ -54,7 +54,6 @@ pub fn on_done_place(
     mut next_state: ResMut<NextState<GameState>>,
 ) {
     if let (Some(grid_x), Some(grid_y)) = (click_position.grid_x, click_position.grid_y) {
-        // Don't place walls on the border
         if grid_x > 0 && grid_x < 19 && grid_y > 0 && grid_y < 14 {
             let mut grid = algorithm_resource.grid.lock().unwrap();
             grid.set(grid_x, grid_y, GridCell::Wall);
@@ -70,7 +69,6 @@ pub fn on_done_delete(
     mut next_state: ResMut<NextState<GameState>>,
 ) {
     if let (Some(grid_x), Some(grid_y)) = (click_position.grid_x, click_position.grid_y) {
-        // Don't delete walls on the border
         if grid_x > 0 && grid_x < 19 && grid_y > 0 && grid_y < 14 {
             let mut grid = algorithm_resource.grid.lock().unwrap();
             grid.set(grid_x, grid_y, GridCell::Air);
