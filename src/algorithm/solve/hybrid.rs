@@ -89,8 +89,8 @@ impl HybridStrategy {
             global_evaporation_coefficient: 0.3,
             deposit_constant: 6000.0,
             init_pheromone: 1.0,
-            ant_number: 80,
-            max_ant_try: 2000,
+            ant_number: 10,
+            max_ant_try: 1000,
 
             particle_inertia: 0.7,
             particle_global_factor: 2.0,
