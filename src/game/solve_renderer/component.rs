@@ -19,6 +19,12 @@ pub struct PathRenderer {
 }
 
 #[derive(Component)]
+pub struct AStarPathRenderer {
+    pub width: f32,
+    pub color: Color,
+}
+
+#[derive(Component)]
 pub struct TemporaryLineRenderer {
     pub timer: Timer,
 }
@@ -35,6 +41,12 @@ impl PointRenderer {
 }
 
 impl PathRenderer {
+    pub fn new(width: f32, color: Color) -> Self {
+        Self { width, color }
+    }
+}
+
+impl AStarPathRenderer {
     pub fn new(width: f32, color: Color) -> Self {
         Self { width, color }
     }

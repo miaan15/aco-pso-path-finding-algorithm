@@ -7,4 +7,5 @@ pub struct AlgorithmResource {
     pub grid: Arc<Mutex<Grid>>,
     pub problem: Problem,
     pub path: Option<Vec<bevy::prelude::Vec2>>,
+    pub astar_path: Option<Vec<bevy::prelude::Vec2>>,
 }

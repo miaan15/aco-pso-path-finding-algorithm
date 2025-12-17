@@ -27,6 +27,7 @@ pub fn create_algorithm_resource() -> AlgorithmResource {
             goal: None,
         },
         path: None,
+        astar_path: None,
     }
 }
 

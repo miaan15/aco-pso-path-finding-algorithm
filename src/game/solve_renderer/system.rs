@@ -1,4 +1,4 @@
-use super::component::{GoalPoint, PathRenderer, PointRenderer, StartPoint, TemporaryLineRenderer, TemporaryLines};
+use super::component::{GoalPoint, PathRenderer, AStarPathRenderer, PointRenderer, StartPoint, TemporaryLineRenderer, TemporaryLines};
 use crate::game::algorithm_resource::AlgorithmResource;
 use bevy::prelude::*;
 
@@ -51,42 +51,67 @@ pub fn render_path(
     mut commands: Commands,
     algorithm_resource: Res<AlgorithmResource>,
     path_query: Query<Entity, With<PathRenderer>>,
+    astar_path_query: Query<Entity, With<AStarPathRenderer>>,
 ) {
-    // Clear existing path entities
-    for entity in path_query.iter() {
+    for entity in path_query.iter().chain(astar_path_query.iter()) {
         commands.entity(entity).despawn();
     }
 
-    // Render new path if available
-    if let Some(path) = &algorithm_resource.path {
-        if path.len() < 2 {
-            return;
-        }
+    if let Some(path) = &algorithm_resource.astar_path {
+        if path.len() >= 2 {
+            for i in 0..path.len() - 1 {
+                let start = path[i];
+                let end = path[i + 1];
 
-        for i in 0..path.len() - 1 {
-            let start = path[i];
-            let end = path[i + 1];
+                let direction = end - start;
+                let length = direction.length();
+                let angle = f32::atan2(direction.y, direction.x);
 
-            // Calculate line properties
-            let direction = end - start;
-            let length = direction.length();
-            let angle = f32::atan2(direction.y, direction.x);
-
-            commands.spawn((
-                PathRenderer::new(2.0, Color::srgb(0.2, 0.6, 1.0)),
-                Transform {
-                    translation: ((start + end) / 2.0).extend(0.5),
-                    rotation: Quat::from_rotation_z(angle),
-                    scale: Vec3::new(length, 1.0, 1.0),
-                },
-                Visibility::default(),
-            )).with_children(|parent| {
-                parent.spawn(Sprite {
-                    color: Color::srgb(0.2, 0.6, 1.0),
-                    custom_size: Some(Vec2::new(1.0, 3.0)),
-                    ..default()
+                commands.spawn((
+                    AStarPathRenderer::new(2.0, Color::srgb(0.5, 0.5, 0.5)),
+                    Transform {
+                        translation: ((start + end) / 2.0).extend(0.4),
+                        rotation: Quat::from_rotation_z(angle),
+                        scale: Vec3::new(length, 1.0, 1.0),
+                    },
+                    Visibility::default(),
+                )).with_children(|parent| {
+                    parent.spawn(Sprite {
+                        color: Color::srgb(0.5, 0.5, 0.5),
+                        custom_size: Some(Vec2::new(1.0, 2.5)),
+                        ..default()
+                    });
                 });
-            });
+            }
+        }
+    }
+
+    if let Some(path) = &algorithm_resource.path {
+        if path.len() >= 2 {
+            for i in 0..path.len() - 1 {
+                let start = path[i];
+                let end = path[i + 1];
+
+                let direction = end - start;
+                let length = direction.length();
+                let angle = f32::atan2(direction.y, direction.x);
+
+                commands.spawn((
+                    PathRenderer::new(2.0, Color::srgb(0.2, 0.6, 1.0)),
+                    Transform {
+                        translation: ((start + end) / 2.0).extend(0.5),
+                        rotation: Quat::from_rotation_z(angle),
+                        scale: Vec3::new(length, 1.0, 1.0),
+                    },
+                    Visibility::default(),
+                )).with_children(|parent| {
+                    parent.spawn(Sprite {
+                        color: Color::srgb(0.2, 0.6, 1.0),
+                        custom_size: Some(Vec2::new(1.0, 3.0)),
+                        ..default()
+                    });
+                });
+            }
         }
     }
 }
@@ -152,13 +177,15 @@ pub fn temp_debug_line(world: &mut World, start: Vec2, end: Vec2) {
 pub fn clear_path(
     mut algorithm_resource: ResMut<AlgorithmResource>,
     path_query: Query<Entity, With<PathRenderer>>,
+    astar_path_query: Query<Entity, With<AStarPathRenderer>>,
     mut commands: Commands,
 ) {
-    // Clear path from algorithm resource
+    // Clear paths from algorithm resource
     algorithm_resource.path = None;
+    algorithm_resource.astar_path = None;
 
     // Remove path entities
-    for entity in path_query.iter() {
+    for entity in path_query.iter().chain(astar_path_query.iter()) {
         commands.entity(entity).despawn();
     }
 }
