@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use crate::{
     algorithm::{
@@ -30,7 +30,7 @@ pub fn create_algorithm_resource() -> AlgorithmResource {
     }
 }
 
-fn create_grid() -> Arc<Grid> {
+fn create_grid() -> Arc<Mutex<Grid>> {
     let mut grid = Grid::new(19, 15, 60.0, 20.0, Vec2::new(-600.0, -400.0));
 
     for x in 0..grid.width() {
@@ -69,5 +69,5 @@ fn create_grid() -> Arc<Grid> {
         grid.set(5, 8 - i, GridCell::Wall);
     }
 
-    Arc::new(grid)
+    Arc::new(Mutex::new(grid))
 }

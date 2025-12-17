@@ -4,7 +4,7 @@ use rand::Rng;
 use std::{
     collections::{HashMap, HashSet},
     hash::Hash,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 
 #[derive(Debug, Clone, Eq)]
@@ -69,7 +69,7 @@ pub struct HybridStrategy {
     pub init_beta_min: f64,
     pub init_beta_max: f64,
 
-    grid: Arc<Grid>,
+    grid: Arc<Mutex<Grid>>,
     cur_alpha: f64,
     cur_beta: f64,
     global_pheromones: HashMap<Line, f64>,
@@ -80,17 +80,17 @@ pub struct HybridStrategy {
 }
 
 impl HybridStrategy {
-    pub fn new(grid: Arc<Grid>) -> Self {
+    pub fn new(grid: Arc<Mutex<Grid>>) -> Self {
         Self {
             exploitation_chance: 0.5,
             elicitation_constant: 1000.0,
-            evaporation_coefficient: 0.4,
+            evaporation_coefficient: 0.2,
             global_deposit_constant: 6000.0,
-            global_evaporation_coefficient: 0.2,
+            global_evaporation_coefficient: 0.3,
             deposit_constant: 6000.0,
             init_pheromone: 1.0,
-            ant_number: 50,
-            max_ant_try: 1000,
+            ant_number: 80,
+            max_ant_try: 2000,
 
             particle_inertia: 0.7,
             particle_global_factor: 2.0,
@@ -102,8 +102,8 @@ impl HybridStrategy {
             init_beta_max: 3.0,
 
             grid,
-            cur_alpha: 1.0,
-            cur_beta: 1.0,
+            cur_alpha: 1.2,
+            cur_beta: 0.9,
             global_pheromones: HashMap::new(),
             global_best_path: None,
             global_best_len: f64::INFINITY,
@@ -314,7 +314,7 @@ impl HybridStrategy {
         if wpos.is_nan() {
             None
         } else {
-            let pixel_size = self.grid.pixel_size();
+            let pixel_size = self.grid.lock().unwrap().pixel_size();
             Some(Node::new(
                 ((wpos.x - pixel_size / 2.0) / pixel_size).round() as i32,
                 ((wpos.y - pixel_size / 2.0) / pixel_size).round() as i32,
@@ -322,7 +322,7 @@ impl HybridStrategy {
         }
     }
     fn node_to_world_pos(&self, npos: Node) -> Vec2 {
-        let pixel_size = self.grid.pixel_size();
+        let pixel_size = self.grid.lock().unwrap().pixel_size();
         Vec2::new(
             npos.pos.0 as f32 * pixel_size + pixel_size / 2.0,
             npos.pos.1 as f32 * pixel_size + pixel_size / 2.0,
@@ -359,6 +359,8 @@ impl HybridStrategy {
         };
 
         self.grid
+            .lock()
+            .unwrap()
             .raycast(ray)
             .map_or(true, |hit| hit.dist >= distance)
     }

@@ -5,7 +5,7 @@ use crate::game::grid_renderer::component::GridRenderer;
 use bevy::prelude::*;
 
 pub fn setup_grid_renderer(mut commands: Commands, algorithm_resource: Res<AlgorithmResource>) {
-    let grid = algorithm_resource.grid.clone();
+    let grid = algorithm_resource.grid.lock().unwrap().clone();
 
     commands.spawn((
         GridRenderer::new(grid, Color::srgb(0.7, 0.4, 0.2)),
@@ -45,5 +45,16 @@ pub fn render_grid(
                 }
             }
         }
+    }
+}
+
+pub fn update_grid_renderer(
+    algorithm_resource: Res<AlgorithmResource>,
+    mut grid_renderer_query: Query<&mut GridRenderer>,
+) {
+    let grid = algorithm_resource.grid.lock().unwrap().clone();
+
+    for mut grid_renderer in grid_renderer_query.iter_mut() {
+        grid_renderer.grid = grid.clone();
     }
 }

@@ -6,7 +6,11 @@ pub enum GameState {
     Idle,
     SetStart,
     SetGoal,
+    PlaceMode,
+    DeleteMode,
     Cancel,
     DoneStart,
     DoneGoal,
+    DonePlace,
+    DoneDelete,
 }

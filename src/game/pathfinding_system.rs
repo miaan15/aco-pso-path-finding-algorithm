@@ -1,6 +1,6 @@
 use crate::algorithm::solve::hybrid::HybridStrategy;
 use bevy::prelude::*;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 #[derive(Resource)]
 pub struct PathfindingStrategy {
@@ -8,7 +8,7 @@ pub struct PathfindingStrategy {
 }
 
 impl PathfindingStrategy {
-    pub fn new(grid: Arc<crate::algorithm::grid::Grid>) -> Self {
+    pub fn new(grid: Arc<Mutex<crate::algorithm::grid::Grid>>) -> Self {
         Self {
             strategy: HybridStrategy::new(grid),
         }

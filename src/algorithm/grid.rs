@@ -261,6 +261,17 @@ impl Grid {
         if t_min <= t_max { Some(t_min) } else { None }
     }
 
+    pub fn clone(&self) -> Grid {
+        Grid {
+            width: self.width,
+            height: self.height,
+            cell_size: self.cell_size,
+            pixel_size: self.pixel_size,
+            root: self.root,
+            data: self.data.clone(),
+        }
+    }
+
     fn get_grid_pos(&self, x: usize, y: usize) -> Option<usize> {
         if x >= self.width || y >= self.height {
             return None;

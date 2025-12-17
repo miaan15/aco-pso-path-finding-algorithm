@@ -145,7 +145,7 @@ impl AStarStrategy {
                 }
             }
 
-            if AStarStrategy::has_line_of_sight(cur.pos, goal, grid_map.as_ref()) {
+            if AStarStrategy::has_line_of_sight(cur.pos, goal, &grid_map.lock().unwrap()) {
                 let goal_key = (goal.x.to_bits(), goal.y.to_bits());
                 predecessors.insert(goal_key, cur.pos);
                 goal_node = Some(Node {
@@ -158,7 +158,7 @@ impl AStarStrategy {
             }
 
             for dir in ProbeDirection::iter() {
-                let new_pos = AStarStrategy::get_new_pos(cur.pos, *dir, grid_map.as_ref());
+                let new_pos = AStarStrategy::get_new_pos(cur.pos, *dir, &grid_map.lock().unwrap());
                 let new_dist = new_pos.distance(cur.pos);
                 let new_g = cur.g + new_dist;
                 let new_key = (new_pos.x.to_bits(), new_pos.y.to_bits());
