@@ -70,6 +70,8 @@ pub struct HybridStrategy {
     global_pheromones: HashMap<Line, f64>,
     global_best_path: Option<Vec<Node>>,
     global_best_len: f64,
+    cache_start: Option<Vec2>,
+    cache_goal: Option<Vec2>,
 }
 
 impl HybridStrategy {
@@ -77,7 +79,7 @@ impl HybridStrategy {
         Self {
             exploitation_chance: 0.5,
             alpha: 1.0,
-            beta: 1.0,
+            beta: 5.0,
             elicitation_constant: 1000.0,
             evaporation_coefficient: 0.4,
             global_deposit_constant: 6000.0,
@@ -91,6 +93,8 @@ impl HybridStrategy {
             global_pheromones: HashMap::new(),
             global_best_path: None,
             global_best_len: f64::INFINITY,
+            cache_start: None,
+            cache_goal: None,
         }
     }
 }
@@ -105,6 +109,25 @@ impl HybridStrategy {
     pub fn path_finding(&mut self, start: Option<Vec2>, goal: Option<Vec2>) -> Option<Vec<Vec2>> {
         let start = start?;
         let goal = goal?;
+
+        if let Some(cached) = self.cache_start {
+            if cached != start {
+                self.global_best_len = f64::INFINITY;
+                self.cache_start = Some(start.clone());
+            }
+        } else {
+            self.global_best_len = f64::INFINITY;
+            self.cache_start = Some(start.clone());
+        }
+        if let Some(cached) = self.cache_goal {
+            if cached != goal {
+                self.global_best_len = f64::INFINITY;
+                self.cache_goal = Some(goal.clone());
+            }
+        } else {
+            self.global_best_len = f64::INFINITY;
+            self.cache_goal = Some(goal.clone());
+        }
 
         let start_node = self.world_to_node_pos(start).unwrap();
         let goal_node = self.world_to_node_pos(goal).unwrap();
@@ -199,7 +222,6 @@ impl HybridStrategy {
             if best_path_len < self.global_best_len {
                 self.global_best_path = Some(path.clone());
                 self.global_best_len = best_path_len;
-                println!("Better path found");
             }
         }
 
