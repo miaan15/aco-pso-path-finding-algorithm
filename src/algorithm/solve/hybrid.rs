@@ -51,22 +51,27 @@ impl PartialEq for Line {
 
 pub struct HybridStrategy {
     pub exploitation_chance: f64,
-    pub alpha: f64,
-    pub beta: f64,
-
     pub elicitation_constant: f64,
-
     pub evaporation_coefficient: f64,
     pub deposit_constant: f64,
     pub global_evaporation_coefficient: f64,
     pub global_deposit_constant: f64,
-
     pub init_pheromone: f64,
-
     pub ant_number: u32,
     pub max_ant_try: u32,
+    
+    pub particle_inertia: f64,
+    pub particle_global_factor: f64,
+    pub particle_local_factor: f64,
+
+    pub init_alpha_min: f64,
+    pub init_alpha_max: f64,
+    pub init_beta_min: f64,
+    pub init_beta_max: f64,
 
     grid: Arc<Grid>,
+    cur_alpha: f64,
+    cur_beta: f64,
     global_pheromones: HashMap<Line, f64>,
     global_best_path: Option<Vec<Node>>,
     global_best_len: f64,
@@ -78,8 +83,6 @@ impl HybridStrategy {
     pub fn new(grid: Arc<Grid>) -> Self {
         Self {
             exploitation_chance: 0.5,
-            alpha: 1.0,
-            beta: 5.0,
             elicitation_constant: 1000.0,
             evaporation_coefficient: 0.4,
             global_deposit_constant: 6000.0,
@@ -89,7 +92,18 @@ impl HybridStrategy {
             ant_number: 50,
             max_ant_try: 1000,
 
+            particle_inertia: 0.7,
+            particle_global_factor: 2.0,
+            particle_local_factor: 2.0,
+
+            init_alpha_min: 0.5,
+            init_alpha_max: 3.0,
+            init_beta_min: 0.5,
+            init_beta_max: 3.0,
+
             grid,
+            cur_alpha: 1.0,
+            cur_beta: 1.0,
             global_pheromones: HashMap::new(),
             global_best_path: None,
             global_best_len: f64::INFINITY,
@@ -286,8 +300,8 @@ impl HybridStrategy {
             return 0.0000000001;
         }
 
-        (*pheromones.get(&line).unwrap_or(&self.init_pheromone)).powf(self.alpha)
-            * self.get_heuristic(line.to.clone(), goal).powf(self.beta)
+        (*pheromones.get(&line).unwrap_or(&self.init_pheromone)).powf(self.cur_alpha)
+            * self.get_heuristic(line.to.clone(), goal).powf(self.cur_beta)
     }
     fn get_heuristic(&self, node: Node, goal: Vec2) -> f64 {
         let wpos = self.node_to_world_pos(node);
