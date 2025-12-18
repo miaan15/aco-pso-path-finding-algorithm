@@ -59,7 +59,7 @@ pub struct HybridStrategy {
     pub init_pheromone: f64,
     pub ant_number: u32,
     pub max_ant_try: u32,
-    
+
     pub particle_inertia: f64,
     pub particle_global_factor: f64,
     pub particle_local_factor: f64,
@@ -70,13 +70,15 @@ pub struct HybridStrategy {
     pub init_beta_max: f64,
 
     grid: Arc<Mutex<Grid>>,
-    cur_alpha: f64,
-    cur_beta: f64,
     global_pheromones: HashMap<Line, f64>,
     global_best_path: Option<Vec<Node>>,
     global_best_len: f64,
     cache_start: Option<Vec2>,
     cache_goal: Option<Vec2>,
+    particles: Vec<(f64, f64)>,
+    local_particle_best: Vec<(f64, f64)>,
+    particle_best_len: Vec<f64>,
+    global_particle_best: Option<(f64, f64)>,
 }
 
 impl HybridStrategy {
@@ -102,13 +104,15 @@ impl HybridStrategy {
             init_beta_max: 3.0,
 
             grid,
-            cur_alpha: 1.2,
-            cur_beta: 0.9,
             global_pheromones: HashMap::new(),
             global_best_path: None,
             global_best_len: f64::INFINITY,
             cache_start: None,
             cache_goal: None,
+            particles: Vec::new(),
+            local_particle_best: Vec::new(),
+            particle_best_len: Vec::new(),
+            global_particle_best: None,
         }
     }
 }
@@ -123,6 +127,18 @@ impl HybridStrategy {
     pub fn path_finding(&mut self, start: Option<Vec2>, goal: Option<Vec2>) -> Option<Vec<Vec2>> {
         let start = start?;
         let goal = goal?;
+
+        if self.particles.is_empty() {
+            for _ in 0..self.ant_number {
+                let mut rng = rand::rng();
+                let alpha = rng.random_range(self.init_alpha_min..self.init_alpha_max);
+                let beta = rng.random_range(self.init_beta_min..self.init_beta_max);
+                self.particles.push((alpha, beta));
+                self.local_particle_best.push((alpha, beta));
+                self.particle_best_len.push(f64::INFINITY);
+                self.global_particle_best = Some((alpha, beta));
+            }
+        }
 
         if let Some(cached) = self.cache_start {
             if cached != start {
@@ -189,8 +205,16 @@ impl HybridStrategy {
 
                 let cur_tabu = tabu.get_mut(ant_idx as usize).unwrap();
 
-                let next_ant_node =
-                    self.calculate_next_node(cur_ant_node.clone(), &pheromones, &cur_tabu, goal);
+                let next_ant_node = self.calculate_next_node(
+                    cur_ant_node.clone(),
+                    &pheromones,
+                    &cur_tabu,
+                    goal,
+                    1.2,
+                    1.8,
+                    // self.particles[ant_idx as usize].0,
+                    // self.particles[ant_idx as usize].1,
+                );
                 let cur_line = Line::new(cur_ant_node.clone(), next_ant_node.clone());
 
                 let cur_path_len = ants_path_len.get_mut(ant_idx as usize).unwrap();
@@ -228,6 +252,13 @@ impl HybridStrategy {
                 best_path = Some(path);
                 best_path_len = ants_path_len[ant_idx as usize];
             }
+
+            if path.last() == Some(&goal_node)
+                && ants_path_len[ant_idx as usize] < self.particle_best_len[ant_idx as usize]
+            {
+                self.particle_best_len[ant_idx as usize] = ants_path_len[ant_idx as usize];
+                self.local_particle_best[ant_idx as usize] = self.particles[ant_idx as usize];
+            }
         }
 
         if let Some(path) = best_path {
@@ -255,6 +286,36 @@ impl HybridStrategy {
             }
         }
 
+        for ant_idx in 0..self.ant_number {
+            if self.particle_best_len[ant_idx as usize] < self.global_best_len {
+                self.global_particle_best = Some(self.particles[ant_idx as usize]);
+            }
+        }
+
+        for ant_idx in 0..self.ant_number {
+            let (cur_alpha, cur_beta) = self.particles[ant_idx as usize];
+            let (local_best_alpha, local_best_beta) = self.local_particle_best[ant_idx as usize];
+            let (global_best_alpha, global_best_beta) = self.global_particle_best.unwrap();
+
+            let mut rng = rand::rng();
+            let new_alpha = self.particle_inertia * cur_alpha
+                + self.particle_local_factor
+                    * rng.random_range(0.0..1.0)
+                    * (local_best_alpha - cur_alpha)
+                + self.particle_global_factor
+                    * rng.random_range(0.0..1.0)
+                    * (global_best_alpha - cur_alpha);
+            let new_beta = self.particle_inertia * cur_beta
+                + self.particle_local_factor
+                    * rng.random_range(0.0..1.0)
+                    * (local_best_beta - cur_beta)
+                + self.particle_global_factor
+                    * rng.random_range(0.0..1.0)
+                    * (global_best_beta - cur_beta);
+
+            self.particles[ant_idx as usize] = (new_alpha, new_beta);
+        }
+
         self.global_best_path.clone().map(|path| {
             path.iter()
                 .map(|x| self.node_to_world_pos(x.clone()))
@@ -268,6 +329,8 @@ impl HybridStrategy {
         pheromones: &HashMap<Line, f64>,
         tabu: &HashSet<Node>,
         goal: Vec2,
+        alpha: f64,
+        beta: f64,
     ) -> Node {
         let is_exploit = HybridStrategy::roll(vec![
             self.exploitation_chance,
@@ -282,6 +345,8 @@ impl HybridStrategy {
                 pheromones,
                 tabu,
                 goal,
+                alpha,
+                beta,
             ));
         }
 
@@ -307,6 +372,8 @@ impl HybridStrategy {
         pheromones: &HashMap<Line, f64>,
         tabu: &HashSet<Node>,
         goal: Vec2,
+        alpha: f64,
+        beta: f64,
     ) -> f64 {
         if tabu.contains(&line.to) {
             return 0.0000001;
@@ -316,8 +383,8 @@ impl HybridStrategy {
             return 0.0000000001;
         }
 
-        (*pheromones.get(&line).unwrap_or(&self.init_pheromone)).powf(self.cur_alpha)
-            * self.get_heuristic(line.to.clone(), goal).powf(self.cur_beta)
+        (*pheromones.get(&line).unwrap_or(&self.init_pheromone)).powf(alpha)
+            * self.get_heuristic(line.to.clone(), goal).powf(beta)
     }
     fn get_heuristic(&self, node: Node, goal: Vec2) -> f64 {
         let wpos = self.node_to_world_pos(node);
